@@ -7,7 +7,6 @@ import ComparisonStats from './components/ComparisonStats';
 import BulkUploadTemplate from './components/BulkUploadTemplate';
 import InvestmentFileUpload from './components/InvestmentFileUpload';
 import InvestmentResultTable from './components/InvestmentResultTable';
-import DuplicateAnalysis from './components/DuplicateAnalysis';
 import { FileUploadState, ComparisonItem, MainTabType, InvestmentUploadState, InvestmentMatchingResult } from './types';
 import { readOrderData, readCoachingData, downloadComparisonResult, downloadSettlementMismatchedData, downloadSuspectedMatchesData, downloadDuplicateCasesData } from './utils/excel';
 import { compareData, calculateStats, findDuplicateCases } from './utils/comparison';

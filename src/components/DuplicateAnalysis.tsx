@@ -1,5 +1,5 @@
 import React from 'react';
-import { Users, AlertTriangle, FileSpreadsheet, Download } from 'lucide-react';
+import { Users, AlertTriangle, Download } from 'lucide-react';
 import { ComparisonItem } from '../types';
 
 interface DuplicateAnalysisProps {

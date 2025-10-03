@@ -1,7 +1,7 @@
 import React, { useState, useMemo } from 'react';
 import { Download, AlertTriangle, UserX, FileSpreadsheet, XCircle } from 'lucide-react';
 import { ComparisonItem, ComparisonStats, TocoNaeCoData } from '../types';
-import { createTocoNaeCoData, findDuplicateCases } from '../utils/comparison';
+import { createTocoNaeCoData } from '../utils/comparison';
 import TocoNaeCoTable from './TocoNaeCoTable';
 import DuplicateAnalysis from './DuplicateAnalysis';
 
