@@ -110,7 +110,7 @@ const DuplicateAnalysis: React.FC<DuplicateAnalysisProps> = ({
         </div>
       </div>
 
-      {/* 상세 리스트 */}
+      {/* 상세 리스트 - 테이블 형태 */}
       <div className="p-6">
         <h4 className="text-md font-semibold text-gray-900 mb-4">
           중복 코칭 상세 내역
@@ -122,79 +122,79 @@ const DuplicateAnalysis: React.FC<DuplicateAnalysisProps> = ({
             <p className="text-gray-500">중복 건이 없습니다.</p>
           </div>
         ) : (
-          <div className="space-y-6">
-            {Object.entries(groupedDuplicates).map(([name, items]) => (
-              <div key={name} className="border border-gray-200 rounded-lg p-4">
-                <div className="flex items-center justify-between mb-3">
-                  <h5 className="text-lg font-semibold text-gray-900">{name}</h5>
-                  <span className="px-3 py-1 bg-purple-100 text-purple-800 rounded-full text-sm font-medium">
-                    {items.length}번 코칭
-                  </span>
-                </div>
-                
-                <div className="space-y-3">
-                  {items.map((item, index) => (
-                    <div key={index} className="bg-gray-50 rounded-lg p-4">
-                      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-                        <div>
-                          <p className="text-xs font-medium text-gray-600 mb-1">결제 정보</p>
-                          <div className="space-y-1">
-                            <p className="text-sm text-gray-900">
-                              <span className="font-medium">결제금액:</span> {formatNumber(item.orderData?.['판매액(원)']).toLocaleString()}원
-                            </p>
-                            <p className="text-sm text-gray-900">
-                              <span className="font-medium">결제일:</span> {formatDateTime(item.orderData?.결제일시)}
-                            </p>
-                            <p className="text-sm text-gray-900">
-                              <span className="font-medium">주문번호:</span> {item.orderData?.주문번호 || '-'}
-                            </p>
-                          </div>
-                        </div>
-                        
-                        <div>
-                          <p className="text-xs font-medium text-gray-600 mb-1">코칭 정보</p>
-                          <div className="space-y-1">
-                            <p className="text-sm text-gray-900">
-                              <span className="font-medium">코치:</span> {item.coachingData?.코치 || '-'}
-                            </p>
-                            <p className="text-sm text-gray-900">
-                              <span className="font-medium">코칭일:</span> {formatDateTime(item.coachingData?.코칭진행일)}
-                            </p>
-                            <p className="text-sm text-gray-900">
-                              <span className="font-medium">진행여부:</span> {item.coachingData?.['진행여부 / 비고'] || '-'}
-                            </p>
-                          </div>
-                        </div>
-                        
-                        <div>
-                          <p className="text-xs font-medium text-gray-600 mb-1">연락처</p>
-                          <div className="space-y-1">
-                            <p className="text-sm text-gray-900">
-                              <span className="font-medium">전화번호:</span> {item.orderData?.휴대폰번호 || item.coachingData?.번호 || '-'}
-                            </p>
-                            <p className="text-sm text-gray-900">
-                              <span className="font-medium">닉네임:</span> {item.orderData?.닉네임 || item.coachingData?.닉네임 || '-'}
-                            </p>
-                          </div>
-                        </div>
-                        
-                        <div>
-                          <p className="text-xs font-medium text-gray-600 mb-1">기타 정보</p>
-                          <div className="space-y-1">
-                            <p className="text-sm text-gray-900">
-                              <span className="font-medium">옵션:</span> {item.orderData?.옵션정보 || '-'}
-                            </p>
-                            <p className="text-sm text-gray-900">
-                              <span className="font-medium">결제수단:</span> {item.orderData?.결제수단 || '-'}
-                            </p>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            ))}
+          <div className="overflow-x-auto">
+            <table className="min-w-full divide-y divide-gray-200">
+              <thead className="bg-gray-50">
+                <tr>
+                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    이름
+                  </th>
+                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    휴대폰번호
+                  </th>
+                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    닉네임
+                  </th>
+                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    옵션정보
+                  </th>
+                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    판매액(원)
+                  </th>
+                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    결제일시
+                  </th>
+                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    코치
+                  </th>
+                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    코칭진행일
+                  </th>
+                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    주문번호
+                  </th>
+                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    진행여부
+                  </th>
+                </tr>
+              </thead>
+              <tbody className="bg-white divide-y divide-gray-200">
+                {duplicateCases.map((item, index) => (
+                  <tr key={index} className="hover:bg-gray-50">
+                    <td className="px-4 py-3 whitespace-nowrap text-sm font-medium text-gray-900">
+                      {item.orderData?.이름 || item.coachingData?.이름 || '-'}
+                    </td>
+                    <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-900">
+                      {item.orderData?.휴대폰번호 || item.coachingData?.번호 || '-'}
+                    </td>
+                    <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-900">
+                      {item.orderData?.닉네임 || item.coachingData?.닉네임 || '-'}
+                    </td>
+                    <td className="px-4 py-3 text-sm text-gray-900 max-w-xs truncate">
+                      {item.orderData?.옵션정보 || '-'}
+                    </td>
+                    <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-900">
+                      {formatNumber(item.orderData?.['판매액(원)']).toLocaleString()}원
+                    </td>
+                    <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-900">
+                      {formatDateTime(item.orderData?.결제일시)}
+                    </td>
+                    <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-900">
+                      {item.coachingData?.코치 || '-'}
+                    </td>
+                    <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-900">
+                      {formatDateTime(item.coachingData?.코칭진행일)}
+                    </td>
+                    <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-900">
+                      {item.orderData?.주문번호 || '-'}
+                    </td>
+                    <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-900">
+                      {item.coachingData?.['진행여부 / 비고'] || '-'}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
           </div>
         )}
       </div>
