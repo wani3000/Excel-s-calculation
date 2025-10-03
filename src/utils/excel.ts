@@ -720,3 +720,122 @@ export const downloadSuspectedMatchesData = (
     alert(`동일인 추측 다운로드 중 오류가 발생했습니다: ${error instanceof Error ? error.message : '알 수 없는 오류'}`);
   }
 };
+
+/**
+ * 중복 건 데이터를 Excel 파일로 다운로드합니다
+ */
+export const downloadDuplicateCasesData = (
+  duplicateItems: ComparisonItem[],
+  coachingType?: 'property' | 'investment',
+  selectedYear?: number,
+  selectedMonth?: number
+) => {
+  try {
+    // 연도/월 정보 생성 (YYMM 형식)
+    const year = selectedYear || new Date().getFullYear();
+    const month = selectedMonth || new Date().getMonth() + 1;
+    const yearMonth = `${year.toString().slice(-2)}${month.toString().padStart(2, '0')}`;
+    
+    // 코칭 타입에 따라 파일명 설정
+    let filename = '';
+    if (coachingType === 'property') {
+      filename = `${yearMonth}_매물코칭_중복건.xlsx`;
+    } else if (coachingType === 'investment') {
+      filename = `${yearMonth}_투자코칭_중복건.xlsx`;
+    } else {
+      filename = `${yearMonth}_데이터_중복건.xlsx`;
+    }
+
+    console.log('중복 건 다운로드 시작:', { items: duplicateItems.length, filename });
+
+    const workbook = XLSX.utils.book_new();
+    const allRows: any[] = [];
+    
+    duplicateItems.forEach((item) => {
+      const order = item.orderData;
+      const coaching = item.coachingData;
+      
+      const formatDateTime = (value: any): string => {
+        if (!value) return '-';
+        if (typeof value === 'number') {
+          const date = new Date((value - 25569) * 86400 * 1000);
+          if (isNaN(date.getTime())) return String(value);
+          return date.toISOString().slice(0, 10).replace(/-/g, '.');
+        }
+        if (typeof value === 'string') return value;
+        if (value instanceof Date) return value.toISOString().slice(0, 10).replace(/-/g, '.');
+        return String(value);
+      };
+
+      const formatNumber = (value: any): number => {
+        if (typeof value === 'number') return value;
+        if (typeof value === 'string') {
+          const cleaned = value.replace(/[^\d.-]/g, '');
+          const parsed = parseFloat(cleaned);
+          return isNaN(parsed) ? 0 : parsed;
+        }
+        return 0;
+      };
+
+      const row = {
+        전시상품명: order?.전시상품명 || '-',
+        이름: (order || coaching)?.이름 || '-',
+        휴대폰번호: order?.휴대폰번호 || coaching?.번호 || '-',
+        주문번호: order?.주문번호 || '-',
+        ID: order?.ID || '-',
+        닉네임: (order || coaching)?.닉네임 || '-',
+        옵션정보: order?.옵션정보 || (coaching ? '코칭서비스' : '-'),
+        '판매액(원)': formatNumber(order?.['판매액(원)']),
+        'PG 결제액(원)': formatNumber(order?.['PG 결제액(원)']),
+        '인앱 결제액(원)': formatNumber(order?.['인앱 결제액(원)']),
+        포인트사용: formatNumber(order?.포인트사용),
+        베네피아포인트: formatNumber(order?.베네피아포인트),
+        '상품권 사용': formatNumber(order?.['상품권 사용']),
+        쿠폰할인: formatNumber(order?.쿠폰할인),
+        상태: '중복 건',
+        결제일시: formatDateTime(order?.결제일시) || '-',
+        대기신청일: formatDateTime(order?.대기신청일) || formatDateTime(coaching?.코칭진행일) || '-',
+        결제수단: order?.결제수단 || '-',
+        결제요청: order?.결제요청 || '-',
+        결제플랫폼: order?.결제플랫폼 || '-',
+        마케팅수신동의: order?.마케팅수신동의 || 'Y',
+        예전아이디: order?.예전아이디 || '-',
+        코치: coaching?.코치 || '-',
+        코칭진행일: formatDateTime(coaching?.코칭진행일) || '-',
+        '진행여부 / 비고': coaching?.['진행여부 / 비고'] || '-',
+        월부학교: coaching?.월부학교 || '-',
+        '1순위(구, 관심지역)': coaching?.['1순위(구, 관심지역)'] || '-',
+        '2순위': coaching?.['2순위'] || '-',
+        중개문자발송여부: coaching?.중개문자발송여부 || '-',
+        중개서비스진행여부: coaching?.중개서비스진행여부 || '-',
+        '취소 및 환불': coaching?.['취소 및 환불'] || '-'
+      };
+      
+      allRows.push(row);
+    });
+
+    const worksheet = XLSX.utils.json_to_sheet(allRows);
+    const sheetName = '중복 건 데이터';
+    XLSX.utils.book_append_sheet(workbook, worksheet, sheetName);
+
+    const wbout = XLSX.write(workbook, { 
+      bookType: 'xlsx', 
+      type: 'array',
+      cellStyles: true,
+      bookSST: true
+    });
+    const blob = new Blob([wbout], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = filename;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+
+  } catch (error) {
+    console.error('중복 건 다운로드 중 오류 발생:', error);
+    alert(`중복 건 다운로드 중 오류가 발생했습니다: ${error instanceof Error ? error.message : '알 수 없는 오류'}`);
+  }
+};

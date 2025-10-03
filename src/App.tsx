@@ -8,8 +8,8 @@ import BulkUploadTemplate from './components/BulkUploadTemplate';
 import InvestmentFileUpload from './components/InvestmentFileUpload';
 import InvestmentResultTable from './components/InvestmentResultTable';
 import { FileUploadState, ComparisonItem, MainTabType, InvestmentUploadState, InvestmentMatchingResult } from './types';
-import { readOrderData, readCoachingData, downloadComparisonResult, downloadSettlementMismatchedData, downloadSuspectedMatchesData } from './utils/excel';
-import { compareData, calculateStats } from './utils/comparison';
+import { readOrderData, readCoachingData, downloadComparisonResult, downloadSettlementMismatchedData, downloadSuspectedMatchesData, downloadDuplicateCasesData } from './utils/excel';
+import { compareData, calculateStats, findDuplicateCases } from './utils/comparison';
 import { readInvestmentOrderFile, readCoachingStatusFile, compareInvestmentData, downloadInvestmentResult, downloadUnmatchedOrders, downloadUnmatchedParticipants } from './utils/investmentComparison';
 
 const App: React.FC = () => {
@@ -186,11 +186,18 @@ const App: React.FC = () => {
 
       // 데이터 비교
       const results = compareData(orderData, coachingData);
-      const stats = calculateStats(results, orderData, coachingData);
+      
+      // 중복 건 찾기
+      const duplicateCases = findDuplicateCases(orderData, coachingData);
+      
+      // 중복 건을 결과에 추가
+      const allResults = [...results, ...duplicateCases];
+      
+      const stats = calculateStats(allResults, orderData, coachingData);
       
       // 매물코칭 전용 상태 업데이트
       if (activeTab === 'property') {
-        setPropertyComparisonItems(results);
+        setPropertyComparisonItems(allResults);
         setPropertyComparisonStats(stats);
         setShowPropertyResults(true);
       }
@@ -392,6 +399,40 @@ const App: React.FC = () => {
       }
     };
 
+  const handleDuplicateCasesDownload = () => {
+    // 매물코칭 전용 다운로드 함수
+    if (activeTab !== 'property') {
+      handleError('매물코칭 탭에서만 사용할 수 있습니다.');
+      return;
+    }
+
+    const currentItems = propertyComparisonItems;
+    const currentUploadState = propertyUploadState;
+    
+    if (currentItems.length === 0) {
+      handleError('다운로드할 데이터가 없습니다.');
+      return;
+    }
+      
+    // 중복 건이 있는지 확인
+    const duplicateItems = currentItems.filter(item => item.result === 'duplicate');
+      
+    if (duplicateItems.length === 0) {
+      handleError('중복 건 데이터가 없습니다.');
+      return;
+    }
+      
+    try {
+      console.log('downloadDuplicateCasesData 호출 전');
+      const coachingType = 'property';
+      downloadDuplicateCasesData(duplicateItems, coachingType, currentUploadState.selectedYear, currentUploadState.selectedMonth);
+      console.log('downloadDuplicateCasesData 호출 후');
+    } catch (error) {
+      console.error('App handleDuplicateCasesDownload 오류:', error);
+      handleError(`중복 건 다운로드 중 오류가 발생했습니다: ${error instanceof Error ? error.message : '알 수 없는 오류'}`);
+    }
+  };
+
   const handleAnalysisComplete = (analysis: any) => {
     setFileAnalysis(analysis);
     console.log('파일 분석 완료:', analysis);
@@ -554,12 +595,13 @@ const App: React.FC = () => {
                     stats={propertyComparisonStats} 
                     coachingType="property" 
                   />
-                  <ComparisonTable 
-                    items={propertyComparisonItems} 
+                  <ComparisonTable
+                    items={propertyComparisonItems}
                     onDownloadMatched={() => handleDownload('matched')}
                     onDownloadMismatched={() => handleDownload('mismatched')}
                     onDownloadSettlement={handleSettlementDownload}
                     onDownloadSuspectedMatches={handleSuspectedMatchesDownload}
+                    onDownloadDuplicates={handleDuplicateCasesDownload}
                     coachingType="property"
                   />
                 </section>

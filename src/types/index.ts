@@ -124,7 +124,7 @@ export interface InvestmentCoachingData {
 }
 
 // 비교 결과 타입
-export type ComparisonResult = 'matched' | 'onlyInA' | 'onlyInB';
+export type ComparisonResult = 'matched' | 'onlyInA' | 'onlyInB' | 'duplicate';
 
 export interface ComparisonItem {
   key: string;

@@ -520,6 +520,65 @@ export const createUnmatchedData = (items: ComparisonItem[]): TocoNaeCoData[] =>
 };
 
 /**
+ * 중복 건을 찾는 함수 (매물코칭 DB에는 2번 이상 있지만 주문내역에는 1건만 있는 경우)
+ */
+export const findDuplicateCases = (
+  orderData: OrderData[],
+  coachingData: CoachingData[]
+): ComparisonItem[] => {
+  const results: ComparisonItem[] = [];
+  
+  // 취소/환불 데이터를 제외한 코칭 데이터 필터링
+  const validCoachingData = coachingData.filter(coaching => {
+    const cancelRefundStatus = String(coaching['취소 및 환불'] || '').trim().toLowerCase();
+    return cancelRefundStatus !== '취소' && cancelRefundStatus !== '환불';
+  });
+  
+  // 이름별로 코칭 데이터 그룹화
+  const coachingByName = new Map<string, CoachingData[]>();
+  validCoachingData.forEach(coaching => {
+    const name = String(coaching.이름 || '').trim();
+    if (name) {
+      if (!coachingByName.has(name)) {
+        coachingByName.set(name, []);
+      }
+      coachingByName.get(name)!.push(coaching);
+    }
+  });
+  
+  // 이름별로 주문 데이터 그룹화
+  const orderByName = new Map<string, OrderData[]>();
+  orderData.forEach(order => {
+    const name = String(order.이름 || '').trim();
+    if (name) {
+      if (!orderByName.has(name)) {
+        orderByName.set(name, []);
+      }
+      orderByName.get(name)!.push(order);
+    }
+  });
+  
+  // 중복 건 찾기: 코칭 DB에는 2번 이상 있지만 주문내역에는 1건만 있는 경우
+  coachingByName.forEach((coachingList, name) => {
+    const orderList = orderByName.get(name) || [];
+    
+    if (coachingList.length >= 2 && orderList.length === 1) {
+      // 각 코칭 건을 별도의 결과로 추가
+      coachingList.forEach((coaching, index) => {
+        results.push({
+          key: `${name}_duplicate_${index}`,
+          orderData: orderList[0], // 주문은 1건만 있으므로 첫 번째 것 사용
+          coachingData: coaching,
+          result: 'duplicate' as any // 새로운 결과 타입
+        });
+      });
+    }
+  });
+  
+  return results;
+};
+
+/**
  * 분석된 파일 구조를 기반으로 동일한 카테고리 구조로 데이터를 변환합니다
  */
 export const createMappedDataFromAnalysis = (
