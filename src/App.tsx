@@ -202,8 +202,16 @@ const App: React.FC = () => {
         return true;
       });
       
+      // 중복 건을 매칭 결과로 변환 (각 코칭 건을 개별 매칭으로 처리)
+      const duplicateAsMatched = duplicateCases.map(item => ({
+        key: `${item.orderData?.이름}_matched_${item.coachingData?.이름}`,
+        orderData: item.orderData,
+        coachingData: item.coachingData,
+        result: 'matched' as const
+      }));
+      
       // 중복 건을 결과에 추가
-      const allResults = [...filteredResults, ...duplicateCases];
+      const allResults = [...filteredResults, ...duplicateAsMatched, ...duplicateCases];
       
       const stats = calculateStats(allResults, orderData, coachingData);
       
