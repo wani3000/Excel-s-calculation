@@ -39,6 +39,7 @@ const MismatchedDataTable: React.FC<{
     // 3. 먼저 매물코칭DB와 주문내역이 같다고 추측되는 사람 찾기 (이름,닉네임,전화번호 중 하나라도 일치)
     const suspectedMatchKeys = new Set<string>();
     const suspectedMatchPairs: { orderItem: ComparisonItem, coachingItem: ComparisonItem, matchType: string }[] = [];
+    const usedCoachingKeys = new Set<string>(); // 이미 매칭된 코칭 항목 추적
     
     baseValidOnlyInAItems.forEach(orderItem => {
       const order = orderItem.orderData!;
@@ -53,13 +54,14 @@ const MismatchedDataTable: React.FC<{
       if (orderPhone) {
         const phoneMatch = baseValidOnlyInBItems.find(coachingItem => {
           const coachingPhone = (coachingItem.coachingData?.번호 || '').trim();
-          return coachingPhone && coachingPhone === orderPhone;
+          return coachingPhone && coachingPhone === orderPhone && !usedCoachingKeys.has(coachingItem.key);
         });
         if (phoneMatch) {
           matchType = '전화번호';
           matchKey = `phone_${orderPhone}`;
           if (!suspectedMatchKeys.has(matchKey)) {
             suspectedMatchKeys.add(matchKey);
+            usedCoachingKeys.add(phoneMatch.key);
             suspectedMatchPairs.push({ orderItem, coachingItem: phoneMatch, matchType });
           }
           return;
@@ -70,13 +72,14 @@ const MismatchedDataTable: React.FC<{
       if (orderNickname) {
         const nicknameMatch = baseValidOnlyInBItems.find(coachingItem => {
           const coachingNickname = (coachingItem.coachingData?.닉네임 || '').trim();
-          return coachingNickname && coachingNickname === orderNickname;
+          return coachingNickname && coachingNickname === orderNickname && !usedCoachingKeys.has(coachingItem.key);
         });
         if (nicknameMatch) {
           matchType = '닉네임';
           matchKey = `nickname_${orderNickname}`;
           if (!suspectedMatchKeys.has(matchKey)) {
             suspectedMatchKeys.add(matchKey);
+            usedCoachingKeys.add(nicknameMatch.key);
             suspectedMatchPairs.push({ orderItem, coachingItem: nicknameMatch, matchType });
           }
           return;
@@ -87,13 +90,14 @@ const MismatchedDataTable: React.FC<{
       if (orderName) {
         const nameMatch = baseValidOnlyInBItems.find(coachingItem => {
           const coachingName = (coachingItem.coachingData?.이름 || '').trim();
-          return coachingName && coachingName === orderName;
+          return coachingName && coachingName === orderName && !usedCoachingKeys.has(coachingItem.key);
         });
         if (nameMatch) {
           matchType = '이름';
           matchKey = `name_${orderName}`;
           if (!suspectedMatchKeys.has(matchKey)) {
             suspectedMatchKeys.add(matchKey);
+            usedCoachingKeys.add(nameMatch.key);
             suspectedMatchPairs.push({ orderItem, coachingItem: nameMatch, matchType });
           }
         }
@@ -131,8 +135,12 @@ const MismatchedDataTable: React.FC<{
     };
   }, [baseValidOnlyInAItems, baseValidOnlyInBItems, items]);
 
-  // 전체 불일치 데이터 (추측 매칭 제외)
-  const allMismatchedItems = [...detailedMismatchAnalysis.onlyInCoachingDBItems, ...detailedMismatchAnalysis.onlyInOrderHistoryItems];
+  // 전체 불일치 데이터 (추측 매칭 제외, 중복 건 포함)
+  const allMismatchedItems = [
+    ...detailedMismatchAnalysis.onlyInCoachingDBItems, 
+    ...detailedMismatchAnalysis.onlyInOrderHistoryItems,
+    ...detailedMismatchAnalysis.duplicateItems
+  ];
 
   // 선택된 카테고리에 따른 필터링된 데이터
   const filteredMismatchedItems = useMemo(() => {

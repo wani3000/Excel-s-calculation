@@ -184,14 +184,26 @@ const App: React.FC = () => {
         return;
       }
 
+      // 먼저 중복 건 찾기
+      const duplicateCases = findDuplicateCases(orderData, coachingData);
+      
+      // 중복 건에서 사용되는 주문 데이터의 키 수집
+      const duplicateOrderKeys = new Set(duplicateCases.map(item => item.orderData?.이름 || '').filter(name => name));
+      
       // 데이터 비교
       const results = compareData(orderData, coachingData);
       
-      // 중복 건 찾기
-      const duplicateCases = findDuplicateCases(orderData, coachingData);
+      // 중복 건에서 사용되는 주문 데이터를 onlyInA에서 제외
+      const filteredResults = results.filter(result => {
+        if (result.result === 'onlyInA' && result.orderData?.이름) {
+          const orderName = String(result.orderData.이름).trim();
+          return !duplicateOrderKeys.has(orderName);
+        }
+        return true;
+      });
       
       // 중복 건을 결과에 추가
-      const allResults = [...results, ...duplicateCases];
+      const allResults = [...filteredResults, ...duplicateCases];
       
       const stats = calculateStats(allResults, orderData, coachingData);
       
