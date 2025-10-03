@@ -429,26 +429,17 @@ const App: React.FC = () => {
       return;
     }
 
-    const currentItems = propertyComparisonItems;
     const currentUploadState = propertyUploadState;
     
-    if (currentItems.length === 0) {
-      handleError('다운로드할 데이터가 없습니다.');
-      return;
-    }
-      
-    // 중복 건이 있는지 확인
-    const duplicateItems = currentItems.filter(item => item.result === 'duplicate');
-      
-    if (duplicateItems.length === 0) {
+    if (duplicateCases.length === 0) {
       handleError('중복 건 데이터가 없습니다.');
       return;
     }
       
     try {
-      console.log('downloadDuplicateCasesData 호출 전');
+      console.log('downloadDuplicateCasesData 호출 전:', { duplicateCases: duplicateCases.length });
       const coachingType = 'property';
-      downloadDuplicateCasesData(duplicateItems, coachingType, currentUploadState.selectedYear, currentUploadState.selectedMonth);
+      downloadDuplicateCasesData(duplicateCases, coachingType, currentUploadState.selectedYear, currentUploadState.selectedMonth);
       console.log('downloadDuplicateCasesData 호출 후');
     } catch (error) {
       console.error('App handleDuplicateCasesDownload 오류:', error);
