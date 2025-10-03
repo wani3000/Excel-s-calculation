@@ -196,7 +196,7 @@ export interface FileUploadState {
 export type CoachingType = 'property' | 'investment';
 
 // 탭 타입
-export type MainTabType = 'property' | 'investment' | 'analyze' | 'bulkUpload';
+export type MainTabType = 'property' | 'investment' | 'order-search' | 'analyze' | 'bulkUpload';
 
 // 비교 결과 통계
 export interface ComparisonStats {
@@ -228,4 +228,27 @@ export interface FileAnalysisResult {
     rowCount: number;
     sampleData: any[];
   };
+}
+
+// 주문번호 검색 결과 타입
+export interface OrderSearchResult {
+  전시상품명: string;
+  이름: string;
+  휴대폰번호: string;
+  주문번호: string;
+  ID: string;
+  닉네임: string;
+  옵션정보: string;
+  '판매액(원)': string | number;
+  코치: string;
+  코칭진행일: string;
+}
+
+// 주문번호 검색 상태 타입
+export interface OrderSearchState {
+  uploadedFile: File | null;
+  searchResults: OrderSearchResult[];
+  searchQuery: string;
+  isSearching: boolean;
+  error: string | null;
 }

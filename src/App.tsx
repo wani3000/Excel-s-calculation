@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Play, AlertCircle, Loader2, FileText, Home, TrendingUp, Upload } from 'lucide-react';
+import { Play, AlertCircle, Loader2, FileText, Home, TrendingUp, Upload, Search } from 'lucide-react';
 import FileUpload from './components/FileUpload';
 import ComparisonTable from './components/ComparisonTable';
 import FileAnalyzer from './components/FileAnalyzer';
@@ -7,10 +7,12 @@ import ComparisonStats from './components/ComparisonStats';
 import BulkUploadTemplate from './components/BulkUploadTemplate';
 import InvestmentFileUpload from './components/InvestmentFileUpload';
 import InvestmentResultTable from './components/InvestmentResultTable';
-import { FileUploadState, ComparisonItem, MainTabType, InvestmentUploadState, InvestmentMatchingResult } from './types';
+import OrderSearch from './components/OrderSearch';
+import { FileUploadState, ComparisonItem, MainTabType, InvestmentUploadState, InvestmentMatchingResult, OrderSearchState } from './types';
 import { readOrderData, readCoachingData, downloadComparisonResult, downloadSettlementMismatchedData, downloadSuspectedMatchesData, downloadDuplicateCasesData } from './utils/excel';
 import { compareData, calculateStats, findDuplicateCases } from './utils/comparison';
 import { readInvestmentOrderFile, readCoachingStatusFile, compareInvestmentData, downloadInvestmentResult, downloadUnmatchedOrders, downloadUnmatchedParticipants } from './utils/investmentComparison';
+import { searchOrdersByNumbers } from './utils/orderSearch';
 
 const App: React.FC = () => {
   // 각 탭별로 독립적인 상태 관리
@@ -35,6 +37,13 @@ const App: React.FC = () => {
 
   const [propertyComparisonItems, setPropertyComparisonItems] = useState<ComparisonItem[]>([]);
   const [investmentMatchingResult, setInvestmentMatchingResult] = useState<InvestmentMatchingResult | null>(null);
+  const [orderSearchState, setOrderSearchState] = useState<OrderSearchState>({
+    uploadedFile: null,
+    searchResults: [],
+    searchQuery: '',
+    isSearching: false,
+    error: null
+  });
   const [isComparing, setIsComparing] = useState(false);
   const [error, setError] = useState<string>('');
   const [showPropertyResults, setShowPropertyResults] = useState(false);
@@ -446,6 +455,56 @@ const App: React.FC = () => {
     }
   };
 
+  // 주문번호 검색 핸들러 함수들
+  const handleOrderSearchFileUpload = (file: File | null) => {
+    setOrderSearchState(prev => ({
+      ...prev,
+      uploadedFile: file,
+      searchResults: [],
+      error: null
+    }));
+  };
+
+  const handleOrderSearchQueryChange = (query: string) => {
+    setOrderSearchState(prev => ({
+      ...prev,
+      searchQuery: query
+    }));
+  };
+
+  const handleOrderSearch = async (orderNumbers: string[]) => {
+    if (!orderSearchState.uploadedFile) {
+      handleError('결산 파일을 먼저 업로드해주세요.');
+      return;
+    }
+
+    setOrderSearchState(prev => ({
+      ...prev,
+      isSearching: true,
+      error: null
+    }));
+
+    try {
+      console.log('주문번호 검색 시작:', { orderNumbers: orderNumbers.length });
+      const results = await searchOrdersByNumbers(orderSearchState.uploadedFile, orderNumbers);
+      
+      setOrderSearchState(prev => ({
+        ...prev,
+        searchResults: results,
+        isSearching: false
+      }));
+
+      console.log(`검색 완료: ${results.length}건 발견`);
+    } catch (error) {
+      console.error('주문번호 검색 오류:', error);
+      setOrderSearchState(prev => ({
+        ...prev,
+        isSearching: false,
+        error: error instanceof Error ? error.message : '알 수 없는 오류가 발생했습니다.'
+      }));
+    }
+  };
+
   const handleAnalysisComplete = (analysis: any) => {
     setFileAnalysis(analysis);
     console.log('파일 분석 완료:', analysis);
@@ -505,6 +564,17 @@ const App: React.FC = () => {
               >
                 <TrendingUp className="w-5 h-5 mr-2" />
                 투자코칭
+              </button>
+              <button
+                onClick={() => setActiveTab('order-search')}
+                className={`flex items-center px-6 py-3 rounded-lg text-lg font-medium transition-colors ${
+                  activeTab === 'order-search'
+                    ? 'bg-white text-black shadow-sm'
+                    : 'text-gray-600 hover:text-black'
+                }`}
+              >
+                <Search className="w-5 h-5 mr-2" />
+                주문번호 검색
               </button>
               <button
                 onClick={() => setActiveTab('analyze')}
@@ -656,6 +726,25 @@ const App: React.FC = () => {
                 />
               </section>
             )}
+          </>
+        )}
+
+        {/* 주문번호 검색 탭 */}
+        {activeTab === 'order-search' && (
+          <>
+            <div className="mb-6 p-4 bg-purple-50 border border-purple-200 rounded-lg">
+              <h2 className="text-lg font-semibold text-purple-800 mb-2">🔍 주문번호 검색</h2>
+              <p className="text-purple-700">
+                YYMM_매물코칭_결산.xlsx 파일에서 주문번호로 데이터를 검색합니다.
+              </p>
+            </div>
+
+            <OrderSearch
+              onFileUpload={handleOrderSearchFileUpload}
+              onSearch={handleOrderSearch}
+              onSearchQueryChange={handleOrderSearchQueryChange}
+              searchState={orderSearchState}
+            />
           </>
         )}
 
