@@ -248,6 +248,7 @@ export interface OrderSearchResult {
 export interface OrderSearchState {
   uploadedFile: File | null;
   searchResults: OrderSearchResult[];
+  notFoundOrderNumbers: string[];
   searchQuery: string;
   isSearching: boolean;
   error: string | null;

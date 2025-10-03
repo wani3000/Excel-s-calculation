@@ -61,28 +61,29 @@ const OrderSearch: React.FC<OrderSearchProps> = ({
     onSearch(orderNumbers);
   };
 
-  const downloadResults = async () => {
+  const downloadResults = () => {
     if (searchState.searchResults.length === 0) {
       alert('다운로드할 결과가 없습니다.');
       return;
     }
 
     // Excel 파일 생성 및 다운로드 로직
-    const XLSX = await import('xlsx');
-    const workbook = XLSX.utils.book_new();
-    const worksheet = XLSX.utils.json_to_sheet(searchState.searchResults);
-    XLSX.utils.book_append_sheet(workbook, worksheet, '주문번호 검색 결과');
+    import('xlsx').then(XLSX => {
+      const workbook = XLSX.utils.book_new();
+      const worksheet = XLSX.utils.json_to_sheet(searchState.searchResults);
+      XLSX.utils.book_append_sheet(workbook, worksheet, '주문번호 검색 결과');
 
-    const wbout = XLSX.write(workbook, { bookType: 'xlsx', type: 'array' });
-    const blob = new Blob([wbout], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement('a');
-    link.href = url;
-    link.download = '주문번호_검색결과.xlsx';
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-    URL.revokeObjectURL(url);
+      const wbout = XLSX.write(workbook, { bookType: 'xlsx', type: 'array' });
+      const blob = new Blob([wbout], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = '주문번호_검색결과.xlsx';
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+    });
   };
 
   return (
@@ -291,6 +292,31 @@ const OrderSearch: React.FC<OrderSearchProps> = ({
                 ))}
               </tbody>
             </table>
+          </div>
+        </div>
+      )}
+
+      {/* 검색 결과 없음 섹션 */}
+      {searchState.notFoundOrderNumbers.length > 0 && (
+        <div className="bg-white p-6 rounded-lg border border-gray-200 shadow-sm">
+          <div className="flex items-center space-x-3 mb-4">
+            <AlertCircle className="w-6 h-6 text-red-600" />
+            <h2 className="text-lg font-semibold text-gray-900">
+              검색 결과 없음 ({searchState.notFoundOrderNumbers.length}건)
+            </h2>
+          </div>
+          
+          <div className="bg-red-50 border border-red-200 rounded-lg p-4">
+            <p className="text-sm text-red-800 mb-3 font-medium">
+              다음 주문번호들을 찾을 수 없습니다:
+            </p>
+            <div className="space-y-2">
+              {searchState.notFoundOrderNumbers.map((orderNumber, index) => (
+                <div key={index} className="bg-white border border-red-200 rounded px-3 py-2">
+                  <span className="font-mono text-sm text-red-900">{orderNumber}</span>
+                </div>
+              ))}
+            </div>
           </div>
         </div>
       )}

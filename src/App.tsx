@@ -40,6 +40,7 @@ const App: React.FC = () => {
   const [orderSearchState, setOrderSearchState] = useState<OrderSearchState>({
     uploadedFile: null,
     searchResults: [],
+    notFoundOrderNumbers: [],
     searchQuery: '',
     isSearching: false,
     error: null
@@ -461,6 +462,7 @@ const App: React.FC = () => {
       ...prev,
       uploadedFile: file,
       searchResults: [],
+      notFoundOrderNumbers: [],
       error: null
     }));
   };
@@ -486,15 +488,16 @@ const App: React.FC = () => {
 
     try {
       console.log('주문번호 검색 시작:', { orderNumbers: orderNumbers.length });
-      const results = await searchOrdersByNumbers(orderSearchState.uploadedFile, orderNumbers);
+      const { results, notFound } = await searchOrdersByNumbers(orderSearchState.uploadedFile, orderNumbers);
       
       setOrderSearchState(prev => ({
         ...prev,
         searchResults: results,
+        notFoundOrderNumbers: notFound,
         isSearching: false
       }));
 
-      console.log(`검색 완료: ${results.length}건 발견`);
+      console.log(`검색 완료: ${results.length}건 발견, ${notFound.length}건 미발견`);
     } catch (error) {
       console.error('주문번호 검색 오류:', error);
       setOrderSearchState(prev => ({

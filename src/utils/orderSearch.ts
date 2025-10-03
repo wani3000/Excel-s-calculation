@@ -5,7 +5,7 @@ import { OrderSearchResult } from '../types';
 export const searchOrdersByNumbers = async (
   file: File,
   orderNumbers: string[]
-): Promise<OrderSearchResult[]> => {
+): Promise<{ results: OrderSearchResult[]; notFound: string[] }> => {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
     
@@ -23,7 +23,7 @@ export const searchOrdersByNumbers = async (
         const jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
 
         if (jsonData.length === 0) {
-          resolve([]);
+          resolve({ results: [], notFound: orderNumbers });
           return;
         }
 
@@ -49,6 +49,7 @@ export const searchOrdersByNumbers = async (
 
         // 데이터 행들 처리 (헤더 제외)
         const results: OrderSearchResult[] = [];
+        const foundOrderNumbers = new Set<string>();
         const dataRows = jsonData.slice(1) as any[][];
 
         for (const row of dataRows) {
@@ -61,6 +62,8 @@ export const searchOrdersByNumbers = async (
           
           // 검색할 주문번호 목록에 포함되어 있는지 확인
           if (orderNumbers.includes(orderNumberStr)) {
+            foundOrderNumbers.add(orderNumberStr);
+            
             const result: OrderSearchResult = {
               전시상품명: row[headerMap.전시상품명] || '-',
               이름: row[headerMap.이름] || '-',
@@ -78,8 +81,11 @@ export const searchOrdersByNumbers = async (
           }
         }
 
-        console.log(`검색 완료: ${results.length}건 발견`);
-        resolve(results);
+        // 찾지 못한 주문번호들
+        const notFound = orderNumbers.filter(num => !foundOrderNumbers.has(num));
+
+        console.log(`검색 완료: ${results.length}건 발견, ${notFound.length}건 미발견`);
+        resolve({ results, notFound });
 
       } catch (error) {
         console.error('주문번호 검색 중 오류:', error);
