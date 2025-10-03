@@ -634,6 +634,20 @@ export const compareInvestmentData = (
   const coachNames = Array.from(uniqueCoaches).filter(name => name && name !== '-');
   const coachList = coachNames.join(', ');
 
+  // 강사별 판매액 계산 (매칭된 주문만)
+  const coachSales: { [coachName: string]: number } = {};
+  matchedOrders.forEach(order => {
+    const coachName = order.코치 || '미지정';
+    const salesAmount = typeof order['판매액(원)'] === 'number' ? order['판매액(원)'] : 
+                      parseFloat(String(order['판매액(원)'] || '0')) || 0;
+    
+    if (coachSales[coachName]) {
+      coachSales[coachName] += salesAmount;
+    } else {
+      coachSales[coachName] = salesAmount;
+    }
+  });
+
   const result = {
     matchedOrders,
     unmatchedParticipants,
@@ -693,7 +707,8 @@ export const compareInvestmentData = (
         uniqueCoaches: uniqueCoaches.size,
         coachList: coachList
       },
-      matchingRate: allOrders.length > 0 ? Math.round((matchedOrders.length / allOrders.length) * 100) : 0
+      matchingRate: allOrders.length > 0 ? Math.round((matchedOrders.length / allOrders.length) * 100) : 0,
+      coachSales: coachSales
     }
   };
   

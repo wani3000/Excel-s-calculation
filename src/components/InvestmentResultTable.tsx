@@ -216,6 +216,13 @@ const InvestmentResultTable: React.FC<{
                 </button>
               </div>
               
+              <div className="mb-4 p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
+                <p className="text-sm text-yellow-800">
+                  <strong>💡 설명:</strong> 투자코칭 주문내역과 내집마련코칭 주문내역에는 있지만, 코칭현황에는 없는 데이터입니다. 
+                  결제는 했지만 실제 코칭 신청을 하지 않은 고객들입니다.
+                </p>
+              </div>
+              
               {unmatchedOrderItems.length > 0 ? (
                 <table className="min-w-full divide-y divide-gray-200">
                   <thead className="bg-gray-50">
@@ -270,6 +277,13 @@ const InvestmentResultTable: React.FC<{
                   <Download className="w-4 h-4" />
                   <span>코칭현황에만 있는 데이터 다운로드</span>
                 </button>
+              </div>
+              
+              <div className="mb-4 p-3 bg-orange-50 border border-orange-200 rounded-lg">
+                <p className="text-sm text-orange-800">
+                  <strong>💡 설명:</strong> 코칭현황에는 있지만 투자코칭 주문내역과 내집마련코칭 주문내역에는 없는 데이터입니다. 
+                  코칭 신청은 했지만 실제 결제를 하지 않은 고객들입니다.
+                </p>
               </div>
               
               {unmatchedParticipantItems.length > 0 ? (

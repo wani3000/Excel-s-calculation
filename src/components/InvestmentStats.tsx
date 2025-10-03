@@ -28,6 +28,9 @@ interface InvestmentStatsProps {
       uniqueCoaches: number;
       coachList: string;
     };
+    coachSales: {
+      [coachName: string]: number;
+    };
   };
 }
 
@@ -283,6 +286,33 @@ const InvestmentStats: React.FC<InvestmentStatsProps> = ({ stats }) => {
             </p>
           </div>
         </div>
+
+        {/* 강사별 판매액 */}
+        {Object.keys(stats.coachSales).length > 0 && (
+          <div className="mt-6 p-6 bg-blue-50 rounded-lg border border-blue-200">
+            <div className="flex items-center space-x-3 mb-6">
+              <DollarSign className="w-6 h-6 text-blue-600" />
+              <p className="text-lg font-semibold text-black">강사별 총 판매액 (매칭된 주문만)</p>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {Object.entries(stats.coachSales)
+                .sort(([,a], [,b]) => b - a) // 판매액 높은 순으로 정렬
+                .map(([coachName, salesAmount]) => (
+                <div key={coachName} className="bg-white p-4 rounded-lg border border-blue-200">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-sm font-medium text-gray-600">{coachName}</p>
+                      <p className="text-xl font-bold text-blue-600">{formatCurrency(salesAmount)}</p>
+                    </div>
+                    <div className="p-2 bg-blue-100 rounded-lg">
+                      <DollarSign className="w-5 h-5 text-blue-600" />
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );

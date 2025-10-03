@@ -100,6 +100,9 @@ export interface InvestmentMatchingResult {
       uniqueCoaches: number;
       coachList: string;
     };
+    coachSales: {
+      [coachName: string]: number;
+    };
     matchingRate: number;
   };
 }
