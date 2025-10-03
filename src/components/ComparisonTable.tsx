@@ -11,10 +11,9 @@ const MismatchedDataTable: React.FC<{
   onDownload: () => void;
   onDownloadSettlement?: () => void;
   onDownloadSuspectedMatches?: () => void;
-  onDownloadDuplicates?: () => void;
   coachingType?: 'property' | 'investment';
-}> = ({ items, onDownload, onDownloadSettlement, onDownloadSuspectedMatches, onDownloadDuplicates, coachingType }) => {
-  const [selectedCategory, setSelectedCategory] = useState<'all' | 'onlyInCoachingDB' | 'onlyInOrderHistory' | 'suspectedMatches' | 'duplicates'>('all');
+}> = ({ items, onDownload, onDownloadSettlement, onDownloadSuspectedMatches, coachingType }) => {
+  const [selectedCategory, setSelectedCategory] = useState<'all' | 'onlyInCoachingDB' | 'onlyInOrderHistory' | 'suspectedMatches'>('all');
 
   // 먼저 기본 필터링 (이름이 있는 행만)
   const baseValidOnlyInAItems = items.filter(item => 
@@ -135,11 +134,10 @@ const MismatchedDataTable: React.FC<{
     };
   }, [baseValidOnlyInAItems, baseValidOnlyInBItems, items]);
 
-  // 전체 불일치 데이터 (추측 매칭 제외, 중복 건 포함)
+  // 전체 불일치 데이터 (추측 매칭 제외, 중복 건 제외)
   const allMismatchedItems = [
     ...detailedMismatchAnalysis.onlyInCoachingDBItems, 
-    ...detailedMismatchAnalysis.onlyInOrderHistoryItems,
-    ...detailedMismatchAnalysis.duplicateItems
+    ...detailedMismatchAnalysis.onlyInOrderHistoryItems
   ];
 
   // 선택된 카테고리에 따른 필터링된 데이터
@@ -157,8 +155,6 @@ const MismatchedDataTable: React.FC<{
           suspectedItems.push(pair.coachingItem);
         });
         return suspectedItems;
-      case 'duplicates':
-        return detailedMismatchAnalysis.duplicateItems;
       case 'all':
       default:
         return allMismatchedItems;
@@ -328,7 +324,7 @@ const MismatchedDataTable: React.FC<{
         </h3>
         
         {/* 상세 통계 */}
-        <div className="grid grid-cols-1 md:grid-cols-5 gap-4 mb-4">
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-4">
           <div className={`p-4 rounded-lg border transition-all cursor-pointer ${
             selectedCategory === 'all' 
               ? 'bg-gray-100 border-gray-400' 
@@ -420,29 +416,6 @@ const MismatchedDataTable: React.FC<{
               </button>
             </div>
           </div>
-          
-          <div className={`p-4 rounded-lg border transition-all cursor-pointer ${
-            selectedCategory === 'duplicates' 
-              ? 'bg-gray-100 border-gray-400' 
-              : 'bg-white border-gray-200 hover:bg-gray-50'
-          }`}>
-            <div className="flex items-center justify-between" onClick={() => setSelectedCategory('duplicates')}>
-              <div>
-                <p className="text-sm font-medium text-gray-700">중복</p>
-                <p className="text-2xl font-bold text-black">{detailedMismatchAnalysis.duplicates}건</p>
-                <p className="text-xs text-gray-600">2번 이상 코칭을 진행했으나, 결제는 1건만 있는</p>
-              </div>
-              <button
-                className={`px-3 py-1 text-xs rounded transition-colors ${
-                  selectedCategory === 'duplicates'
-                    ? 'bg-gray-700 text-white'
-                    : 'bg-black text-white hover:bg-gray-700'
-                }`}
-              >
-                상세보기
-              </button>
-            </div>
-          </div>
         </div>
         
         {/* 기존 요약 정보 */}
@@ -483,7 +456,6 @@ const MismatchedDataTable: React.FC<{
                 || selectedCategory === 'onlyInCoachingDB' && '매물코칭DB에만 있는 사람'
                 || selectedCategory === 'onlyInOrderHistory' && '주문내역에만 있는 사람'
                 || selectedCategory === 'suspectedMatches' && '같다고 추측되는 사람'
-                || selectedCategory === 'duplicates' && '중복 건'
               } ({groupedMismatchedItems.length}건)
             </h4>
             
@@ -494,15 +466,6 @@ const MismatchedDataTable: React.FC<{
               >
                 <FileSpreadsheet className="w-4 h-4 mr-2" />
                 동일인을 결산 스타일로 다운로드
-              </button>
-            )}
-            {selectedCategory === 'duplicates' && onDownloadDuplicates && (
-              <button
-                onClick={onDownloadDuplicates}
-                className="flex items-center px-4 py-2 bg-purple-600 text-white text-sm rounded-lg hover:bg-purple-700 transition-colors"
-              >
-                <FileSpreadsheet className="w-4 h-4 mr-2" />
-                중복 건 다운로드
               </button>
             )}
           </div>

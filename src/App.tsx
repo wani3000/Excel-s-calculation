@@ -210,8 +210,8 @@ const App: React.FC = () => {
         result: 'matched' as const
       }));
       
-      // 중복 건을 결과에 추가
-      const allResults = [...filteredResults, ...duplicateAsMatched, ...duplicateCases];
+      // 중복 건은 매칭 결과에만 포함 (불일치 데이터에서는 제외)
+      const allResults = [...filteredResults, ...duplicateAsMatched];
       
       const stats = calculateStats(allResults, orderData, coachingData);
       
@@ -621,7 +621,6 @@ const App: React.FC = () => {
                     onDownloadMismatched={() => handleDownload('mismatched')}
                     onDownloadSettlement={handleSettlementDownload}
                     onDownloadSuspectedMatches={handleSuspectedMatchesDownload}
-                    onDownloadDuplicates={handleDuplicateCasesDownload}
                     coachingType="property"
                   />
                 </section>
