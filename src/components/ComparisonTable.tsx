@@ -3,6 +3,7 @@ import { Download, AlertTriangle, UserX, FileSpreadsheet, XCircle } from 'lucide
 import { ComparisonItem, ComparisonStats, TocoNaeCoData } from '../types';
 import { createTocoNaeCoData, findDuplicateCases } from '../utils/comparison';
 import TocoNaeCoTable from './TocoNaeCoTable';
+import DuplicateAnalysis from './DuplicateAnalysis';
 
 // 불일치 데이터 테이블 컴포넌트
 const MismatchedDataTable: React.FC<{
@@ -647,12 +648,14 @@ interface ComparisonTableProps {
   onDownloadMismatched: () => void;
   onDownloadSettlement?: () => void;
   onDownloadSuspectedMatches?: () => void;
+  onDownloadDuplicates?: () => void;
+  duplicateCases?: ComparisonItem[];
   coachingType?: 'property' | 'investment';
 }
 
-type TabType = 'tocoNaeCo' | 'mismatched' | 'cancelled';
+type TabType = 'tocoNaeCo' | 'mismatched' | 'cancelled' | 'duplicates';
 
-const ComparisonTable: React.FC<ComparisonTableProps> = ({ items, onDownloadMatched, onDownloadMismatched, onDownloadSettlement, onDownloadSuspectedMatches, coachingType }) => {
+const ComparisonTable: React.FC<ComparisonTableProps> = ({ items, onDownloadMatched, onDownloadMismatched, onDownloadSettlement, onDownloadSuspectedMatches, onDownloadDuplicates, duplicateCases = [], coachingType }) => {
   const [activeTab, setActiveTab] = useState<TabType>('tocoNaeCo');
   // 필터 상태는 현재 사용하지 않음
 
@@ -796,6 +799,19 @@ const ComparisonTable: React.FC<ComparisonTableProps> = ({ items, onDownloadMatc
             <XCircle className="w-4 h-4 mr-2" />
             취소 및 환불 ({cancelledAndRefundedItems.length})
           </button>
+          {duplicateCases.length > 0 && (
+            <button
+              onClick={() => setActiveTab('duplicates')}
+              className={`flex items-center px-4 py-2 rounded-md text-sm font-medium transition-colors ${
+                activeTab === 'duplicates'
+                  ? 'bg-white text-purple-700 shadow-sm'
+                  : 'text-gray-600 hover:text-gray-800'
+              }`}
+            >
+              <AlertTriangle className="w-4 h-4 mr-2" />
+              중복 건 ({duplicateCases.length})
+            </button>
+          )}
         </div>
       </div>
 
@@ -815,6 +831,11 @@ const ComparisonTable: React.FC<ComparisonTableProps> = ({ items, onDownloadMatc
               onDownloadSettlement={onDownloadSettlement}
               onDownloadSuspectedMatches={onDownloadSuspectedMatches}
               coachingType={coachingType}
+            />
+          ) : activeTab === 'duplicates' ? (
+            <DuplicateAnalysis 
+              duplicateCases={duplicateCases}
+              onDownloadDuplicates={onDownloadDuplicates}
             />
           ) : (
             /* 취소 및 환불 탭 */

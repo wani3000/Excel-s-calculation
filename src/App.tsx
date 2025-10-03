@@ -7,6 +7,7 @@ import ComparisonStats from './components/ComparisonStats';
 import BulkUploadTemplate from './components/BulkUploadTemplate';
 import InvestmentFileUpload from './components/InvestmentFileUpload';
 import InvestmentResultTable from './components/InvestmentResultTable';
+import DuplicateAnalysis from './components/DuplicateAnalysis';
 import { FileUploadState, ComparisonItem, MainTabType, InvestmentUploadState, InvestmentMatchingResult } from './types';
 import { readOrderData, readCoachingData, downloadComparisonResult, downloadSettlementMismatchedData, downloadSuspectedMatchesData, downloadDuplicateCasesData } from './utils/excel';
 import { compareData, calculateStats, findDuplicateCases } from './utils/comparison';
@@ -43,6 +44,7 @@ const App: React.FC = () => {
   const [fileAnalyzerData, setFileAnalyzerData] = useState<any>(null);
   const [activeTab, setActiveTab] = useState<MainTabType>('property');
   const [propertyComparisonStats, setPropertyComparisonStats] = useState<any>(null);
+  const [duplicateCases, setDuplicateCases] = useState<ComparisonItem[]>([]);
 
   const handleError = (errorMessage: string) => {
     setError(errorMessage);
@@ -219,6 +221,7 @@ const App: React.FC = () => {
       if (activeTab === 'property') {
         setPropertyComparisonItems(allResults);
         setPropertyComparisonStats(stats);
+        setDuplicateCases(duplicateCases); // 중복 건 정보 저장
         setShowPropertyResults(true);
       }
       console.log('비교 완료:', results.length, '개 항목', stats);
@@ -621,6 +624,8 @@ const App: React.FC = () => {
                     onDownloadMismatched={() => handleDownload('mismatched')}
                     onDownloadSettlement={handleSettlementDownload}
                     onDownloadSuspectedMatches={handleSuspectedMatchesDownload}
+                    onDownloadDuplicates={handleDuplicateCasesDownload}
+                    duplicateCases={duplicateCases}
                     coachingType="property"
                   />
                 </section>
