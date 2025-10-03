@@ -76,7 +76,7 @@ const InvestmentFileUpload: React.FC<InvestmentFileUploadProps> = ({
   };
 
   const removeFile = (type: 'investmentOrder' | 'homeOrder' | 'coachingStatus') => {
-    onFileUpload(null, type);
+    onFileUpload(null as any, type);
   };
 
   const formatFileSize = (bytes: number): string => {

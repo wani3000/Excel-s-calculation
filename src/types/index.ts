@@ -74,6 +74,34 @@ export interface InvestmentMatchingResult {
   totalParticipants: number;
   totalOrders: number;
   matchedCount: number;
+  stats: {
+    total: number;
+    matched: number;
+    unmatchedOrders: number;
+    unmatchedParticipants: number;
+    onlyInA: number;
+    onlyInB: number;
+    investmentStats: {
+      orderTotal: number;
+      matched: number;
+      totalAmount: number;
+      dateRange: string;
+    };
+    homeStats: {
+      orderTotal: number;
+      matched: number;
+      totalAmount: number;
+      dateRange: string;
+    };
+    coachingStats: {
+      totalParticipants: number;
+      validParticipants: number;
+      cancelledCount: number;
+      uniqueCoaches: number;
+      coachList: string;
+    };
+    matchingRate: number;
+  };
 }
 
 // 투자코칭DB 데이터 타입 정의 (매물코칭과 동일한 구조)

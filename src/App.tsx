@@ -580,13 +580,6 @@ const App: React.FC = () => {
 
             {/* 파일 업로드 섹션 */}
             <section className="mb-8">
-              {console.log('InvestmentFileUpload props 전달:', {
-                uploadState: !!investmentUploadState,
-                onFileUpload: !!handleInvestmentFileUpload,
-                onDateChange: !!handleInvestmentDateChange,
-                onCompare: !!handleInvestmentCompare,
-                isComparing
-              })}
               <InvestmentFileUpload
                 uploadState={investmentUploadState}
                 onFileUpload={handleInvestmentFileUpload}

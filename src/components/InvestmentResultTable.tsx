@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from 'react';
-import { Download, AlertTriangle, UserX, FileSpreadsheet, XCircle, CheckCircle } from 'lucide-react';
+import { Download, AlertTriangle, FileSpreadsheet, CheckCircle } from 'lucide-react';
 import { InvestmentMatchingResult } from '../types';
 import InvestmentStats from './InvestmentStats';
 
@@ -55,8 +55,6 @@ const InvestmentResultTable: React.FC<{
     }));
   }, [result.unmatchedParticipants]);
 
-  // 모든 불일치 데이터 합치기
-  const allMismatchedItems = [...unmatchedOrderItems, ...unmatchedParticipantItems];
 
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat('ko-KR', {
@@ -66,13 +64,6 @@ const InvestmentResultTable: React.FC<{
     }).format(amount);
   };
 
-  const formatDate = (date: Date) => {
-    return date.toLocaleDateString('ko-KR', {
-      year: 'numeric',
-      month: '2-digit',
-      day: '2-digit'
-    });
-  };
 
   const formatDateTime = (value: any): string => {
     if (!value) return '-';

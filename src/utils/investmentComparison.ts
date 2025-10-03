@@ -23,7 +23,7 @@ export const readInvestmentOrderFile = (file: File): Promise<InvestmentOrderData
         // 모든 행을 로그로 출력하여 파일 구조 파악
         console.log('=== 투자코칭 주문내역 파일 전체 구조 ===');
         jsonData.slice(0, 10).forEach((row, index) => {
-          console.log(`행 ${index}:`, row?.slice(0, 5)); // 첫 5개 컬럼만 출력
+          console.log(`행 ${index}:`, (row as any[])?.slice(0, 5)); // 첫 5개 컬럼만 출력
         });
         console.log('================================');
         
@@ -144,7 +144,7 @@ export const readCoachingStatusFile = (file: File): Promise<InvestmentParticipan
         // 모든 행을 로그로 출력하여 파일 구조 파악
         console.log('=== 투자코칭 현황 파일 전체 구조 ===');
         jsonData.slice(0, 10).forEach((row, index) => {
-          console.log(`행 ${index}:`, row?.slice(0, 5)); // 첫 5개 컬럼만 출력
+          console.log(`행 ${index}:`, (row as any[])?.slice(0, 5)); // 첫 5개 컬럼만 출력
         });
         console.log('================================');
 
@@ -586,41 +586,8 @@ export const compareInvestmentData = (
   console.log(`매칭되지 않은 주문: ${unmatchedOrders.length}개`);
   console.log(`매칭되지 않은 코칭 스케줄: ${unmatchedParticipants.length}개`);
   
-  // 상세 통계 계산
-  const totalSales = matchedOrders.reduce((sum, order) => {
-    const sales = typeof order['판매액(원)'] === 'number' ? order['판매액(원)'] : 
-                 parseFloat(String(order['판매액(원)'] || '0')) || 0;
-    return sum + sales;
-  }, 0);
 
-  const totalPG = matchedOrders.reduce((sum, order) => {
-    const pg = typeof order['PG 결제액(원)'] === 'number' ? order['PG 결제액(원)'] : 
-              parseFloat(String(order['PG 결제액(원)'] || '0')) || 0;
-    return sum + pg;
-  }, 0);
 
-  // 날짜 범위 계산
-  const orderDates = allOrders
-    .map(order => order.결제일시)
-    .filter(date => date)
-    .map(date => new Date(date))
-    .filter(date => !isNaN(date.getTime()));
-
-  const coachingDates = matchedOrders
-    .map(order => order.코칭진행일)
-    .filter(date => date && date !== '-')
-    .map(date => new Date(date))
-    .filter(date => !isNaN(date.getTime()));
-
-  const orderDateRange = orderDates.length > 0 ? {
-    min: new Date(Math.min(...orderDates.map(d => d.getTime()))),
-    max: new Date(Math.max(...orderDates.map(d => d.getTime())))
-  } : null;
-
-  const coachingDateRange = coachingDates.length > 0 ? {
-    min: new Date(Math.min(...coachingDates.map(d => d.getTime()))),
-    max: new Date(Math.max(...coachingDates.map(d => d.getTime())))
-  } : null;
 
   // 코치 수 계산
   const uniqueCoaches = new Set(matchedOrders.map(order => order.코치).filter(coach => coach && coach !== '-'));
@@ -671,6 +638,9 @@ export const compareInvestmentData = (
     matchedOrders,
     unmatchedParticipants,
     unmatchedOrders,
+    totalParticipants: coachingSchedule.length,
+    totalOrders: allOrders.length,
+    matchedCount: matchedOrders.length,
     stats: {
       total: allOrders.length,
       matched: matchedOrders.length,
@@ -722,7 +692,8 @@ export const compareInvestmentData = (
         ).length,
         uniqueCoaches: uniqueCoaches.size,
         coachList: coachList
-      }
+      },
+      matchingRate: allOrders.length > 0 ? Math.round((matchedOrders.length / allOrders.length) * 100) : 0
     }
   };
   
