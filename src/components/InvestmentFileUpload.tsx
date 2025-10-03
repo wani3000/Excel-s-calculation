@@ -299,11 +299,13 @@ const InvestmentFileUpload: React.FC<InvestmentFileUploadProps> = ({
         
         <p className="text-gray-600 mb-4">투자코칭 현황.xlsx 파일을 업로드하세요</p>
         
-        <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-4">
+        <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-4">
           <div className="flex items-start space-x-2">
-            <AlertTriangle className="w-5 h-5 text-yellow-600 mt-0.5 flex-shrink-0" />
-            <p className="text-sm text-yellow-800">
-              참여자 정보가 포함된 Excel 파일을 업로드하세요.
+            <AlertTriangle className="w-5 h-5 text-red-600 mt-0.5 flex-shrink-0" />
+            <p className="text-sm text-red-800">
+              <strong>⚠️ 중요:</strong> 엑셀의 가장 맨윗줄 첫번째 행은 반드시<br/>
+              <strong>코치 | 상담일시 | 요일 | 시간 | 닉네임 | 연락처 | 성함 | 메모</strong><br/>
+              이 순서대로 되어야 합니다. 그렇지 않으면 에러가 발생합니다.
             </p>
           </div>
         </div>
