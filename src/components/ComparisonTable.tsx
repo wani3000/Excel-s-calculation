@@ -16,14 +16,14 @@ const MismatchedDataTable: React.FC<{
 }> = ({ items, onDownload, onDownloadSettlement, onDownloadSuspectedMatches, onDownloadDuplicates, coachingType }) => {
   const [selectedCategory, setSelectedCategory] = useState<'all' | 'onlyInCoachingDB' | 'onlyInOrderHistory' | 'suspectedMatches' | 'duplicates'>('all');
 
-  // 빈 행 제외하고 필터링 (이름이 있는 행만)
-  const validOnlyInAItems = items.filter(item => 
+  // 먼저 기본 필터링 (이름이 있는 행만)
+  const baseValidOnlyInAItems = items.filter(item => 
     item.result === 'onlyInA' && 
     item.orderData?.이름 && 
     String(item.orderData.이름).trim() !== ''
   );
   
-  const validOnlyInBItems = items.filter(item => 
+  const baseValidOnlyInBItems = items.filter(item => 
     item.result === 'onlyInB' && 
     item.coachingData?.이름 && 
     String(item.coachingData.이름).trim() !== '' &&
@@ -33,23 +33,14 @@ const MismatchedDataTable: React.FC<{
       return cancelRefundStatus !== '취소' && cancelRefundStatus !== '환불';
     })()
   );
-  
-  const allMismatchedItems = [...validOnlyInAItems, ...validOnlyInBItems];
 
   // 불일치 데이터 상세 분석
   const detailedMismatchAnalysis = useMemo(() => {
-    // 1. 매물코칭DB에만 있는 사람 (주문내역에는 없는 것)
-    const onlyInCoachingDB = validOnlyInBItems.length;
-
-    // 2. 주문내역에만 있는 사람 (매물코칭DB에는 없는 것)
-    const onlyInOrderHistory = validOnlyInAItems.length;
-
-    // 3. 매물코칭DB와 주문내역이 같다고 추측되는 사람 (이름,닉네임,전화번호 중 하나라도 일치)
-    // 매칭된 쌍을 찾아서 함께 표시
+    // 3. 먼저 매물코칭DB와 주문내역이 같다고 추측되는 사람 찾기 (이름,닉네임,전화번호 중 하나라도 일치)
     const suspectedMatchKeys = new Set<string>();
     const suspectedMatchPairs: { orderItem: ComparisonItem, coachingItem: ComparisonItem, matchType: string }[] = [];
     
-    validOnlyInAItems.forEach(orderItem => {
+    baseValidOnlyInAItems.forEach(orderItem => {
       const order = orderItem.orderData!;
       const orderName = (order.이름 || '').trim();
       const orderPhone = (order.휴대폰번호 || '').trim();
@@ -60,7 +51,7 @@ const MismatchedDataTable: React.FC<{
       
       // 전화번호가 일치하는지 확인 (우선순위 1)
       if (orderPhone) {
-        const phoneMatch = validOnlyInBItems.find(coachingItem => {
+        const phoneMatch = baseValidOnlyInBItems.find(coachingItem => {
           const coachingPhone = (coachingItem.coachingData?.번호 || '').trim();
           return coachingPhone && coachingPhone === orderPhone;
         });
@@ -77,7 +68,7 @@ const MismatchedDataTable: React.FC<{
       
       // 전화번호가 일치하지 않으면 닉네임 확인 (우선순위 2)
       if (orderNickname) {
-        const nicknameMatch = validOnlyInBItems.find(coachingItem => {
+        const nicknameMatch = baseValidOnlyInBItems.find(coachingItem => {
           const coachingNickname = (coachingItem.coachingData?.닉네임 || '').trim();
           return coachingNickname && coachingNickname === orderNickname;
         });
@@ -94,7 +85,7 @@ const MismatchedDataTable: React.FC<{
       
       // 전화번호, 닉네임이 일치하지 않으면 이름 확인 (우선순위 3)
       if (orderName) {
-        const nameMatch = validOnlyInBItems.find(coachingItem => {
+        const nameMatch = baseValidOnlyInBItems.find(coachingItem => {
           const coachingName = (coachingItem.coachingData?.이름 || '').trim();
           return coachingName && coachingName === orderName;
         });
@@ -111,12 +102,26 @@ const MismatchedDataTable: React.FC<{
     
     const suspectedMatches = suspectedMatchPairs;
 
+    // 추측 매칭된 항목들의 키 수집
+    const suspectedOrderKeys = new Set(suspectedMatchPairs.map(pair => pair.orderItem.key));
+    const suspectedCoachingKeys = new Set(suspectedMatchPairs.map(pair => pair.coachingItem.key));
+
+    // 1. 추측 매칭을 제외한 매물코칭DB에만 있는 사람
+    const validOnlyInBItems = baseValidOnlyInBItems.filter(item => 
+      !suspectedCoachingKeys.has(item.key)
+    );
+
+    // 2. 추측 매칭을 제외한 주문내역에만 있는 사람  
+    const validOnlyInAItems = baseValidOnlyInAItems.filter(item => 
+      !suspectedOrderKeys.has(item.key)
+    );
+
     // 4. 중복 건 찾기 (매물코칭 DB에는 2번 이상 있지만 주문내역에는 1건만 있는 경우)
     const duplicateItems = items.filter(item => item.result === 'duplicate');
 
     return {
-      onlyInCoachingDB: onlyInCoachingDB,
-      onlyInOrderHistory: onlyInOrderHistory,
+      onlyInCoachingDB: validOnlyInBItems.length,
+      onlyInOrderHistory: validOnlyInAItems.length,
       suspectedMatches: suspectedMatches.length,
       duplicates: duplicateItems.length,
       onlyInCoachingDBItems: validOnlyInBItems,
@@ -124,7 +129,10 @@ const MismatchedDataTable: React.FC<{
       suspectedMatchItems: suspectedMatchPairs,
       duplicateItems: duplicateItems
     };
-  }, [validOnlyInAItems, validOnlyInBItems]);
+  }, [baseValidOnlyInAItems, baseValidOnlyInBItems, items]);
+
+  // 전체 불일치 데이터 (추측 매칭 제외)
+  const allMismatchedItems = [...detailedMismatchAnalysis.onlyInCoachingDBItems, ...detailedMismatchAnalysis.onlyInOrderHistoryItems];
 
   // 선택된 카테고리에 따른 필터링된 데이터
   const filteredMismatchedItems = useMemo(() => {
@@ -308,7 +316,7 @@ const MismatchedDataTable: React.FC<{
       <div className="bg-gray-50 border border-gray-200 rounded-lg p-4 mb-4">
         <h3 className="text-lg font-semibold text-black mb-2 flex items-center">
           <AlertTriangle className="w-5 h-5 mr-2 text-gray-600" />
-          불일치 데이터 상세 분석 ({validOnlyInAItems.length + validOnlyInBItems.length}건)
+          불일치 데이터 상세 분석 ({allMismatchedItems.length}건)
         </h3>
         
         {/* 상세 통계 */}
@@ -321,7 +329,7 @@ const MismatchedDataTable: React.FC<{
             <div className="flex items-center justify-between" onClick={() => setSelectedCategory('all')}>
               <div>
                 <p className="text-sm font-medium text-gray-700">전체</p>
-                <p className="text-2xl font-bold text-black">{validOnlyInAItems.length + validOnlyInBItems.length}건</p>
+                <p className="text-2xl font-bold text-black">{allMismatchedItems.length}건</p>
                 <p className="text-xs text-gray-600">모든 불일치 데이터</p>
               </div>
               <button
@@ -431,8 +439,8 @@ const MismatchedDataTable: React.FC<{
         
         {/* 기존 요약 정보 */}
         <p className="text-sm text-gray-600">
-          결제했지만 {coachingTypeLabel} DB 없음: {validOnlyInAItems.length}건, 
-          {coachingTypeLabel} 신청했지만 결제 없음: {validOnlyInBItems.length}건
+          결제했지만 {coachingTypeLabel} DB 없음: {detailedMismatchAnalysis.onlyInOrderHistory}건, 
+          {coachingTypeLabel} 신청했지만 결제 없음: {detailedMismatchAnalysis.onlyInCoachingDB}건
         </p>
       </div>
 
